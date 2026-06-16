@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://127.0.0.1:5181/)",
+      "Bash(curl -s \"http://127.0.0.1:5181/src/App.tsx\")",
+      "Read(//tmp/**)",
+      "Bash(pkill -f \"vite --no-open\")"
+    ]
+  }
+}

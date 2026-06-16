@@ -1,0 +1,15 @@
+nome,categoria,unidade,valor,valor_pago,data_vencimento,data_pagamento,pago
+Aluguel,Moradia,Matriz,3200.00,,2026-06-20,,nao
+Energia elétrica,Utilidades,Matriz,845.70,,2026-06-17,,nao
+Internet/Fibra,Utilidades,Matriz,199.90,,2026-06-12,,nao
+Fornecedor ACME,Fornecedores,Filial 1,5400.00,,2026-06-24,,nao
+Software (SaaS),TI,Matriz,320.00,320.00,2026-06-07,2026-06-06,sim
+Folha de pagamento,Pessoal,Matriz,18750.00,,2026-06-19,,nao
+Água e esgoto,Utilidades,Filial 1,268.40,,2026-06-14,,nao
+Contador,Serviços,Matriz,1200.00,1200.00,2026-06-16,2026-06-15,sim
+Manutenção predial,Serviços,Filial 2,980.00,400.00,2026-06-27,2026-06-26,sim
+Telefonia móvel,Utilidades,Matriz,430.00,,2026-06-22,,nao
+Material de escritório,Suprimentos,Filial 1,156.30,156.30,2026-06-10,2026-06-09,sim
+Seguro empresarial,Financeiro,Matriz,2100.00,,2026-06-30,,nao
+Marketing digital,Marketing,Matriz,3500.00,,2026-06-21,,nao
+Frete/Logística,Fornecedores,Filial 2,720.00,,2026-06-18,,nao
