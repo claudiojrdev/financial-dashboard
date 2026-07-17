@@ -25,7 +25,7 @@ import { EstadoVazio } from './components/EstadoVazio';
 import { BotaoSync } from './components/BotaoSync';
 import { ConfigMeeventos } from './components/ConfigMeeventos';
 import { Toaster, toast } from './components/Toaster';
-import { IconFiltro } from './components/icons';
+import { IconFiltro, IconSettings } from './components/icons';
 
 export default function App() {
   const {
@@ -51,7 +51,6 @@ export default function App() {
     excluirCategoria,
     meeventosConfigurado,
     setMeeventosConfigurado,
-    ultimaSync,
     setUltimaSync,
   } = useStore();
 
@@ -61,6 +60,8 @@ export default function App() {
   const [catAberto, setCatAberto] = useState(false);
   const [filtrosAberto, setFiltrosAberto] = useState(false);
   const [configMeeventosAberto, setConfigMeeventosAberto] = useState(false);
+  const [filtroPago, setFiltroPago] = useState<'todas' | 'pago' | 'aberto'>('todas');
+  const [filtroTipo, setFiltroTipo] = useState<'receita' | 'despesa'>('despesa');
 
   const hoje = hojeISO();
 
@@ -78,8 +79,15 @@ export default function App() {
   const mapaCat = useMemo(() => mapaCategorias(categorias), [categorias]);
 
   const contasFiltradas = useMemo(
-    () => contas.filter((c) => avaliarConta(c, filtro, { hoje })),
-    [contas, filtro, hoje]
+    () => contas
+      .filter((c) => avaliarConta(c, filtro, { hoje }))
+      .filter((c) => {
+        if (filtroPago === 'pago') return c.pago;
+        if (filtroPago === 'aberto') return !c.pago;
+        return true;
+      })
+      .filter((c) => c.tipocobranca === filtroTipo),
+    [contas, filtro, hoje, filtroPago, filtroTipo]
   );
 
   const porDia = useMemo(() => agruparPorVencimento(contasFiltradas), [contasFiltradas]);
@@ -131,7 +139,7 @@ export default function App() {
   const aposSync = useCallback(async () => {
     try {
       const [movRes, cats] = await Promise.all([
-        api.getMovements(ultimaSync ?? undefined),
+        api.getMovements(),
         api.getCategories(),
       ]);
       if (movRes.data.length === 0) return;
@@ -146,7 +154,7 @@ export default function App() {
     } catch {
       carregar();
     }
-  }, [ultimaSync, carregar, carregarConjunto, setUltimaSync]);
+  }, [carregar, carregarConjunto, setUltimaSync]);
 
   function exportar(tipo: 'csv' | 'xlsx') {
     if (!contas.length) return;
@@ -208,15 +216,54 @@ export default function App() {
               </div>
             )}
 
-            <div className="flex items-center gap-3">
-              <BotaoSync onSyncComplete={aposSync} />
-              <button
-                type="button"
-                onClick={() => setConfigMeeventosAberto(true)}
-                className="btn-outline px-2.5 py-1 text-xs"
-              >
-                {meeventosConfigurado ? 'Meeventos' : 'Conectar Meeventos'}
-              </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-1">
+                {(['todas', 'pago', 'aberto'] as const).map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setFiltroPago(opt)}
+                    className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                      filtroPago === opt
+                        ? 'bg-brand-600 text-white dark:bg-brand-500'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {opt === 'todas' ? 'Todas' : opt === 'pago' ? 'Pago' : 'Em aberto'}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex flex-1 items-center justify-center gap-1">
+                <div className="inline-flex overflow-hidden rounded-md border border-slate-200 dark:border-slate-700">
+                  {(['receita', 'despesa'] as const).map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setFiltroTipo(opt)}
+                      className={`px-3 py-1 text-xs font-medium transition-colors ${
+                        filtroTipo === opt
+                          ? 'bg-brand-600 text-white dark:bg-brand-500'
+                          : 'bg-white text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      {opt === 'receita' ? 'Receitas' : 'Despesas'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ml-auto flex items-center gap-1">
+                <BotaoSync onSyncComplete={aposSync} />
+                <button
+                  type="button"
+                  onClick={() => setConfigMeeventosAberto(true)}
+                  title={meeventosConfigurado ? 'Configurar Meeventos' : 'Conectar Meeventos'}
+                  className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                >
+                  <IconSettings width={16} height={16} />
+                </button>
+              </div>
             </div>
 
             <div className="card relative min-h-[34rem] flex-1 overflow-hidden">
@@ -236,7 +283,6 @@ export default function App() {
                       porDia={porDia}
                       mapaCat={mapaCat}
                       onAbrirConta={abrirConta}
-                      onTogglePago={togglePago}
                       onNovaNoDia={novaNoDia}
                       onSoltarNoDia={soltarNoDia}
                     />
@@ -247,7 +293,6 @@ export default function App() {
                       porDia={porDia}
                       mapaCat={mapaCat}
                       onAbrirConta={abrirConta}
-                      onTogglePago={togglePago}
                       onNovaNoDia={novaNoDia}
                       onSoltarNoDia={soltarNoDia}
                     />

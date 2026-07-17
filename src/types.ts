@@ -150,4 +150,6 @@ export interface GrupoConta {
   catCor: string;
   contas: Conta[];
   soma: number;
+  status: StatusConta;
+  emAberto: number;
 }

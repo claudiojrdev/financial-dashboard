@@ -13,7 +13,6 @@ interface Props {
   porDia: Map<string, Conta[]>;
   mapaCat: Map<string, Categoria>;
   onAbrirConta: (conta: Conta) => void;
-  onTogglePago: (conta: Conta) => void;
   onNovaNoDia: (dataISO: string) => void;
   onSoltarNoDia: (id: string, dataISO: string) => void;
 }
@@ -32,7 +31,6 @@ export function CalendarioSemanal({
   porDia,
   mapaCat,
   onAbrirConta,
-  onTogglePago,
   onNovaNoDia,
   onSoltarNoDia,
 }: Props) {
@@ -58,6 +56,8 @@ export function CalendarioSemanal({
         const ehHoje = dia === hoje;
         const contas = porDia.get(dia) ?? [];
         const totalDia = contas.reduce((s, c) => s + c.valor, 0);
+        const pagoDia = contas.reduce((s, c) => s + (c.valor_pago ?? 0), 0);
+        const abertoDia = contas.reduce((s, c) => s + (c.valor - (c.valor_pago ?? 0)), 0);
         const alvo = diaAlvo === dia;
 
         const grupos = agruparPorCategoria(contas, mapaCat);
@@ -135,7 +135,6 @@ export function CalendarioSemanal({
                       detalhado
                       arrastavel
                       onClick={onAbrirConta}
-                      onTogglePago={onTogglePago}
                       onArrastarInicio={() => setArrastando(true)}
                       onArrastarFim={() => {
                         setArrastando(false);
@@ -152,7 +151,6 @@ export function CalendarioSemanal({
                       mapaCat={mapaCat}
                       detalhado
                       onClick={onAbrirConta}
-                      onTogglePago={onTogglePago}
                       onArrastarInicio={() => setArrastando(true)}
                       onArrastarFim={() => {
                         setArrastando(false);
@@ -165,8 +163,14 @@ export function CalendarioSemanal({
             </div>
 
             {totalDia > 0 && (
-              <div className="border-t border-slate-200 px-2 py-1.5 text-right text-xs font-semibold tabular-nums text-slate-500 dark:border-slate-800 dark:text-slate-400">
-                {formatarMoeda(totalDia)}
+              <div className="border-t border-slate-200 px-2 py-1.5 text-right text-[11px] tabular-nums leading-tight text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                <div>Total: {formatarMoeda(totalDia)}</div>
+                <div className="text-emerald-600 dark:text-emerald-400">
+                  Pago: {formatarMoeda(pagoDia)}
+                </div>
+                <div className="text-amber-600 dark:text-amber-400">
+                  Aberto: {formatarMoeda(abertoDia)}
+                </div>
               </div>
             )}
           </div>

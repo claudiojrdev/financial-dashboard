@@ -50,8 +50,9 @@ export const api = {
   getSyncStatus: () => request<SyncStatus>('/meeventos/status'),
 
   getMovements: (since?: string) => {
-    const params = since ? `?since=${encodeURIComponent(since)}` : '';
-    return request<MovementsResponse>(`/movements${params}`);
+    const params = new URLSearchParams({ limit: '10000' });
+    if (since) params.set('since', since);
+    return request<MovementsResponse>(`/movements?${params}`);
   },
 
   getCategories: () => request<Categoria[]>('/categories'),

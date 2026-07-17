@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
+import { IconRefresh } from './icons';
 import { toast } from './Toaster';
 
 interface Props {
@@ -36,24 +37,25 @@ export function BotaoSync({ onSyncComplete }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="relative">
       {erro && (
-        <span className="text-xs text-red-500" title={erro}>
-          ⚠
-        </span>
-      )}
-      {ultimaSync && (
-        <span className="text-[11px] text-slate-400">
-          {new Date(ultimaSync).toLocaleString('pt-BR')}
-        </span>
+        <div
+          className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-red-500"
+          title={erro}
+        />
       )}
       <button
         type="button"
         onClick={sincronizar}
         disabled={sincronizando}
-        className="btn-outline px-2.5 py-1 text-xs"
+        title={`Sincronizar${ultimaSync ? ` · Última: ${new Date(ultimaSync).toLocaleString('pt-BR')}` : ''}`}
+        className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
       >
-        {sincronizando ? 'Sincronizando…' : 'Sincronizar'}
+        <IconRefresh
+          width={16}
+          height={16}
+          className={sincronizando ? 'animate-spin' : ''}
+        />
       </button>
     </div>
   );

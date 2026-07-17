@@ -12,7 +12,6 @@ interface Props {
   porDia: Map<string, Conta[]>;
   mapaCat: Map<string, Categoria>;
   onAbrirConta: (conta: Conta) => void;
-  onTogglePago: (conta: Conta) => void;
   onNovaNoDia: (dataISO: string) => void;
   onSoltarNoDia: (id: string, dataISO: string) => void;
 }
@@ -33,7 +32,6 @@ export function CalendarioMensal({
   porDia,
   mapaCat,
   onAbrirConta,
-  onTogglePago,
   onNovaNoDia,
   onSoltarNoDia,
 }: Props) {
@@ -142,7 +140,6 @@ export function CalendarioMensal({
                       mapaCat={mapaCat}
                       arrastavel
                       onClick={onAbrirConta}
-                      onTogglePago={onTogglePago}
                       onArrastarInicio={() => setArrastando(true)}
                       onArrastarFim={() => {
                         setArrastando(false);
@@ -158,7 +155,6 @@ export function CalendarioMensal({
                       hoje={hoje}
                       mapaCat={mapaCat}
                       onClick={onAbrirConta}
-                      onTogglePago={onTogglePago}
                       onArrastarInicio={() => setArrastando(true)}
                       onArrastarFim={() => {
                         setArrastando(false);

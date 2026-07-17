@@ -8,7 +8,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import type { Categoria, Conta, GrupoConta, Visao } from '../types';
+import type { Categoria, Conta, GrupoConta, StatusConta, Visao } from '../types';
 import { formatarISO } from './normalize';
 
 /** Semana começando no domingo (padrão pt-BR). */
@@ -116,12 +116,40 @@ export function agruparPorCategoria(
   }
   return [...mapa.entries()].map(([chave, lista]) => {
     const cat = chave !== '__sem_categoria__' ? mapaCat.get(chave) : undefined;
+
+    const todosPagos = lista.every((c) => c.pago);
+    const nenhumPago = lista.every((c) => !c.pago);
+    const algumVencido = lista.some(
+      (c) => !c.pago && c.data_vencimento < formatarISO(new Date())
+    );
+
+    let status: StatusConta;
+    if (todosPagos) {
+      const algumParcial = lista.some(
+        (c) => c.valor_pago != null && c.valor_pago + 0.005 < c.valor
+      );
+      status = algumParcial ? 'parcial' : 'pago';
+    } else if (nenhumPago && algumVencido) {
+      status = 'vencido';
+    } else if (nenhumPago) {
+      status = 'pendente';
+    } else {
+      status = 'parcial';
+    }
+
+    const emAberto = lista.reduce(
+      (acc, c) => acc + (c.valor - (c.valor_pago ?? 0)),
+      0
+    );
+
     return {
       categoria_id: chave === '__sem_categoria__' ? null : chave,
       catNome: cat?.nome ?? 'Sem categoria',
       catCor: cat?.cor ?? '#94a3b8',
       contas: lista,
       soma: lista.reduce((acc, c) => acc + c.valor, 0),
+      status,
+      emAberto,
     };
   });
 }

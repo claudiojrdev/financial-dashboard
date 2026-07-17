@@ -76,6 +76,7 @@ routerSync.post('/meeventos/sync', async (req, res) => {
     let page = 1;
     let total = 0;
     let totalPaginas = 1;
+    const idsSincronizados = [];
 
     db.prepare('DELETE FROM sync_meta WHERE chave = ?').run('sync_erro');
 
@@ -84,9 +85,11 @@ routerSync.post('/meeventos/sync', async (req, res) => {
       const movimentos = resultado.data || [];
       totalPaginas = resultado.pagination?.total_page || 1;
 
+      const agoraSQL = new Date().toISOString();
+
       const upsertMov = db.prepare(`
         INSERT INTO movimentacoes (id, nome, categoria_id, unidade, tipocobranca, valor, valor_pago, data_vencimento, data_pagamento, pago, meeventos_id, meeventos_evento, updated_at)
-        VALUES (@id, @nome, @categoria_id, @unidade, @tipocobranca, @valor, @valor_pago, @data_vencimento, @data_pagamento, @pago, @meeventos_id, @meeventos_evento, datetime('now'))
+        VALUES (@id, @nome, @categoria_id, @unidade, @tipocobranca, @valor, @valor_pago, @data_vencimento, @data_pagamento, @pago, @meeventos_id, @meeventos_evento, @agora)
         ON CONFLICT(id) DO UPDATE SET
           nome = excluded.nome,
           categoria_id = excluded.categoria_id,
@@ -106,7 +109,8 @@ routerSync.post('/meeventos/sync', async (req, res) => {
           const mov = mapearMovimento(item);
           const idCat = item.idcategoria != null ? parseInt(item.idcategoria, 10) : null;
           mov.categoria_id = mapearCategoria(db, item.categoria, idCat);
-          upsertMov.run(mov);
+          upsertMov.run({ ...mov, agora: agoraSQL });
+          idsSincronizados.push(mov.id);
         }
       });
 
@@ -114,6 +118,11 @@ routerSync.post('/meeventos/sync', async (req, res) => {
       total += movimentos.length;
       page++;
     } while (page <= totalPaginas);
+
+    if (idsSincronizados.length > 0) {
+      const placeholders = idsSincronizados.map(() => '?').join(',');
+      db.prepare(`DELETE FROM movimentacoes WHERE id LIKE 'meev-%' AND id NOT IN (${placeholders})`).run(...idsSincronizados);
+    }
 
     const agora = new Date().toISOString();
     db.prepare('INSERT INTO sync_meta (chave, valor) VALUES (?, ?) ON CONFLICT(chave) DO UPDATE SET valor = excluded.valor')

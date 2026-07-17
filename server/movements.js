@@ -5,7 +5,7 @@ export const routerMovements = Router();
 
 routerMovements.get('/movements', (req, res) => {
   const db = getDB();
-  const { since, pago, tipocobranca, page = 1, limit = '500' } = req.query;
+  const { since, pago, tipocobranca, page = 1, limit = '10000' } = req.query;
 
   let sql = 'SELECT * FROM movimentacoes WHERE 1=1';
   const params = [];
@@ -56,9 +56,9 @@ routerMovements.put('/movements/:id/toggle-pago', (req, res) => {
 
   db.prepare(`
     UPDATE movimentacoes
-    SET pago = ?, data_pagamento = ?, valor_pago = ?, updated_at = datetime('now')
+    SET pago = ?, data_pagamento = ?, valor_pago = ?, updated_at = ?
     WHERE id = ?
-  `).run(novoPago, novoPago ? hoje : null, novoPago ? mov.valor : null, id);
+  `).run(novoPago, novoPago ? hoje : null, novoPago ? mov.valor : null, new Date().toISOString(), id);
 
   const atualizada = db.prepare('SELECT * FROM movimentacoes WHERE id = ?').get(id);
   res.json(normalizar(atualizada));
