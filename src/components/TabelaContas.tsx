@@ -44,7 +44,7 @@ export function TabelaContas({
             <th className="px-3 py-2 font-semibold">Status</th>
             <th className="px-3 py-2 font-semibold">Nome</th>
             <th className="px-3 py-2 font-semibold">Categoria</th>
-            <th className="px-3 py-2 font-semibold">Unidade</th>
+            <th className="px-3 py-2 font-semibold">C. Custo</th>
             <th className="px-3 py-2 text-right font-semibold">Valor</th>
             <th className="px-3 py-2 text-right font-semibold">Pago</th>
             <th className="px-3 py-2 font-semibold">Vencimento</th>

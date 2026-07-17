@@ -177,7 +177,19 @@ export function ModalEdicao({
                   )}
                 </div>
                 <div>
-                  <label className="field-label" htmlFor="f-uni">Unidade</label>
+                  <label className="field-label" htmlFor="f-tipo">Tipo</label>
+                  <select
+                    id="f-tipo"
+                    className="field-input"
+                    value={rascunho.tipocobranca}
+                    onChange={(e) => set('tipocobranca', e.target.value as 'receita' | 'despesa')}
+                  >
+                    <option value="despesa">Despesa</option>
+                    <option value="receita">Receita</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="field-label" htmlFor="f-uni">Centro de custo</label>
                   <input
                     id="f-uni"
                     className="field-input"

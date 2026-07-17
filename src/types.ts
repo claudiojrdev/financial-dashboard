@@ -6,12 +6,15 @@ export interface Categoria {
   cor: string;
 }
 
+export type TipoCobranca = 'receita' | 'despesa';
+
 /** Campos do modelo de uma conta a pagar. */
 export interface Conta {
   id: string;
   nome: string;
   /** Referência à categoria gerenciada, ou `null` (sem categoria). */
   categoria_id: string | null;
+  /** Centro de custo (equivalente ao campo unidade no Asaas / centrodecusto no Meeventos). */
   unidade: string;
   /** Valor previsto/devido. */
   valor: number;
@@ -22,6 +25,8 @@ export interface Conta {
   /** Data de pagamento em ISO `yyyy-mm-dd`, ou `null`. */
   data_pagamento: string | null;
   pago: boolean;
+  /** Receita ou despesa. */
+  tipocobranca: TipoCobranca;
 }
 
 /** Chaves do modelo. */
@@ -40,7 +45,8 @@ export type CampoImportavel =
   | 'valor_pago'
   | 'data_vencimento'
   | 'data_pagamento'
-  | 'pago';
+  | 'pago'
+  | 'tipocobranca';
 
 export type Severidade = 'erro' | 'aviso';
 
@@ -103,7 +109,8 @@ export type CampoFiltro =
   | 'valor_pago'
   | 'pago'
   | 'data_vencimento'
-  | 'data_pagamento';
+  | 'data_pagamento'
+  | 'tipocobranca';
 
 export type ValorFiltro =
   | string

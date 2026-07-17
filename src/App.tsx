@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Conta, Visao } from './types';
 import { useStore } from './store/useStore';
@@ -10,6 +10,7 @@ import { calcularTotais } from './lib/totais';
 import { hojeISO } from './lib/status';
 import { mapaCategorias } from './lib/categorias';
 import { avaliarConta, contarRegras } from './lib/filtros';
+import { api } from './lib/api';
 import { Cabecalho } from './components/Cabecalho';
 import { BarraPeriodo } from './components/BarraPeriodo';
 import { Resumo } from './components/Resumo';
@@ -21,6 +22,8 @@ import { ModalImportacao } from './components/ModalImportacao';
 import { ModalCategorias } from './components/ModalCategorias';
 import { ModalFiltros } from './components/ModalFiltros';
 import { EstadoVazio } from './components/EstadoVazio';
+import { BotaoSync } from './components/BotaoSync';
+import { ConfigMeeventos } from './components/ConfigMeeventos';
 import { Toaster, toast } from './components/Toaster';
 import { IconFiltro } from './components/icons';
 
@@ -46,6 +49,10 @@ export default function App() {
     criarCategoria,
     atualizarCategoria,
     excluirCategoria,
+    meeventosConfigurado,
+    setMeeventosConfigurado,
+    ultimaSync,
+    setUltimaSync,
   } = useStore();
 
   const [contaAberta, setContaAberta] = useState<Conta | null>(null);
@@ -53,12 +60,20 @@ export default function App() {
   const [importAberto, setImportAberto] = useState(false);
   const [catAberto, setCatAberto] = useState(false);
   const [filtrosAberto, setFiltrosAberto] = useState(false);
+  const [configMeeventosAberto, setConfigMeeventosAberto] = useState(false);
 
   const hoje = hojeISO();
 
   useEffect(() => {
     carregar();
   }, [carregar]);
+
+  useEffect(() => {
+    api.getSyncStatus().then((s) => {
+      setMeeventosConfigurado(s.configurado);
+      if (s.ultima_sync) setUltimaSync(s.ultima_sync);
+    }).catch(() => {});
+  }, [setMeeventosConfigurado, setUltimaSync]);
 
   const mapaCat = useMemo(() => mapaCategorias(categorias), [categorias]);
 
@@ -71,10 +86,10 @@ export default function App() {
   const totais = useMemo(() => calcularTotais(contasFiltradas, hoje), [contasFiltradas, hoje]);
   const filtrosAtivos = filtro ? contarRegras(filtro) : 0;
 
-  function abrirConta(conta: Conta) {
+  const abrirConta = useCallback((conta: Conta) => {
     setNovaConta(false);
     setContaAberta(conta);
-  }
+  }, []);
 
   function novaNoDia(dataISO: string) {
     setNovaConta(true);
@@ -91,7 +106,7 @@ export default function App() {
     toast.sucesso(novaConta ? 'Conta criada.' : 'Conta atualizada.');
   }
 
-  async function excluir(id: string) {
+  async function excluirContaAction(id: string) {
     await excluirConta(id);
     setContaAberta(null);
     toast.info('Conta excluída.');
@@ -112,6 +127,26 @@ export default function App() {
     await carregarConjunto(cs, cats);
     toast.sucesso('Dados de exemplo carregados.');
   }
+
+  const aposSync = useCallback(async () => {
+    try {
+      const [movRes, cats] = await Promise.all([
+        api.getMovements(ultimaSync ?? undefined),
+        api.getCategories(),
+      ]);
+      if (movRes.data.length === 0) return;
+      await carregarConjunto(
+        movRes.data.map((m) => ({ ...m, pago: !!m.pago })),
+        cats
+      );
+      if (movRes.pagination.total > 0) {
+        setUltimaSync(new Date().toISOString());
+        toast.sucesso(`${movRes.data.length} movimentações atualizadas.`);
+      }
+    } catch {
+      carregar();
+    }
+  }, [ultimaSync, carregar, carregarConjunto, setUltimaSync]);
 
   function exportar(tipo: 'csv' | 'xlsx') {
     if (!contas.length) return;
@@ -173,6 +208,17 @@ export default function App() {
               </div>
             )}
 
+            <div className="flex items-center gap-3">
+              <BotaoSync onSyncComplete={aposSync} />
+              <button
+                type="button"
+                onClick={() => setConfigMeeventosAberto(true)}
+                className="btn-outline px-2.5 py-1 text-xs"
+              >
+                {meeventosConfigurado ? 'Meeventos' : 'Conectar Meeventos'}
+              </button>
+            </div>
+
             <div className="card relative min-h-[34rem] flex-1 overflow-hidden">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
@@ -213,7 +259,7 @@ export default function App() {
                       hoje={hoje}
                       onUpsert={upsertConta}
                       onTogglePago={togglePago}
-                      onExcluir={excluir}
+                      onExcluir={excluirContaAction}
                     />
                   )}
                 </motion.div>
@@ -229,7 +275,7 @@ export default function App() {
         categorias={categorias}
         onFechar={() => setContaAberta(null)}
         onSalvar={salvar}
-        onExcluir={excluir}
+        onExcluir={excluirContaAction}
         onCriarCategoria={criarCategoria}
       />
 
@@ -260,6 +306,11 @@ export default function App() {
         categorias={categorias}
         onFechar={() => setFiltrosAberto(false)}
         onAplicar={setFiltro}
+      />
+
+      <ConfigMeeventos
+        aberto={configMeeventosAberto}
+        onFechar={() => setConfigMeeventosAberto(false)}
       />
 
       <Toaster />

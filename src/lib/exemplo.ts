@@ -71,6 +71,7 @@ export function gerarExemplo(): { categorias: Categoria[]; contas: Conta[] } {
       data_vencimento: venc,
       data_pagamento: pago ? formatarISO(addDays(hoje, m.offset - 1)) : null,
       pago,
+      tipocobranca: 'despesa',
     };
   });
 

@@ -15,7 +15,7 @@ export function alternarPago(conta: Conta): Conta {
 }
 
 /** Cria uma conta vazia com vencimento numa data (ISO). */
-export function contaVazia(dataVencimento: string): Conta {
+export function contaVazia(dataVencimento: string, tipocobranca: 'receita' | 'despesa' = 'despesa'): Conta {
   return {
     id: crypto.randomUUID(),
     nome: '',
@@ -26,5 +26,6 @@ export function contaVazia(dataVencimento: string): Conta {
     data_vencimento: dataVencimento,
     data_pagamento: null,
     pago: false,
+    tipocobranca,
   };
 }

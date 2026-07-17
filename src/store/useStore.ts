@@ -22,6 +22,10 @@ interface EstadoApp {
   tema: Tema;
   /** Filtro ativo (árvore E/OU) ou null. */
   filtro: GrupoFiltro | null;
+  /** Meeventos está configurado? */
+  meeventosConfigurado: boolean;
+  /** Última sincronização ISO ou null. */
+  ultimaSync: string | null;
 
   carregar: () => Promise<void>;
   setVisao: (v: Visao) => void;
@@ -39,6 +43,9 @@ interface EstadoApp {
   criarCategoria: (nome: string, cor: string) => Promise<Categoria>;
   atualizarCategoria: (categoria: Categoria) => Promise<void>;
   excluirCategoria: (id: string) => Promise<void>;
+
+  setMeeventosConfigurado: (v: boolean) => void;
+  setUltimaSync: (iso: string | null) => void;
 }
 
 const SEM_CATEGORIA = slug('Sem categoria');
@@ -62,6 +69,8 @@ export const useStore = create<EstadoApp>((set, get) => ({
   visao: 'mensal',
   tema: temaInicial(),
   filtro: null,
+  meeventosConfigurado: false,
+  ultimaSync: null,
 
   carregar: async () => {
     set({ carregando: true });
@@ -191,4 +200,7 @@ export const useStore = create<EstadoApp>((set, get) => ({
       contas: s.contas.map((c) => (c.categoria_id === id ? { ...c, categoria_id: null } : c)),
     }));
   },
+
+  setMeeventosConfigurado: (v) => set({ meeventosConfigurado: v }),
+  setUltimaSync: (iso) => set({ ultimaSync: iso }),
 }));
