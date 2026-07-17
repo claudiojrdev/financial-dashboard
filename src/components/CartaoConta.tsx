@@ -91,7 +91,7 @@ export function CartaoConta({
           {conta.nome}
         </span>
       </div>
-      <div className="mt-0.5 flex items-center justify-between pl-7">
+      <div className="mt-0.5 flex flex-wrap items-center justify-between gap-x-1 pl-7">
         <span className="tabular-nums text-slate-500 dark:text-slate-400">
           {formatarMoeda(conta.valor)}
         </span>
