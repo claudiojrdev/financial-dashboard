@@ -8,7 +8,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import type { Conta, Visao } from '../types';
+import type { Categoria, Conta, GrupoConta, Visao } from '../types';
 import { formatarISO } from './normalize';
 
 /** Semana começando no domingo (padrão pt-BR). */
@@ -100,4 +100,28 @@ export function tituloPeriodo(dataRef: string, visao: Visao): string {
   const fim = parseISO(dias[6]);
   const f = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
   return `${f(ini)} – ${f(fim)} de ${fim.getFullYear()}`;
+}
+
+/** Agrupa contas por categoria — útil para contas do mesmo dia. */
+export function agruparPorCategoria(
+  contas: Conta[],
+  mapaCat: Map<string, Categoria>
+): GrupoConta[] {
+  const mapa = new Map<string, Conta[]>();
+  for (const c of contas) {
+    const chave = c.categoria_id ?? '__sem_categoria__';
+    const lista = mapa.get(chave);
+    if (lista) lista.push(c);
+    else mapa.set(chave, [c]);
+  }
+  return [...mapa.entries()].map(([chave, lista]) => {
+    const cat = chave !== '__sem_categoria__' ? mapaCat.get(chave) : undefined;
+    return {
+      categoria_id: chave === '__sem_categoria__' ? null : chave,
+      catNome: cat?.nome ?? 'Sem categoria',
+      catCor: cat?.cor ?? '#94a3b8',
+      contas: lista,
+      soma: lista.reduce((acc, c) => acc + c.valor, 0),
+    };
+  });
 }

@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { parseISO } from 'date-fns';
 import type { Categoria, Conta } from '../types';
-import { NOMES_DIAS, gradeMensal } from '../lib/calendar';
+import { NOMES_DIAS, agruparPorCategoria, gradeMensal } from '../lib/calendar';
 import { CartaoConta } from './CartaoConta';
+import { CartaoGrupo } from './CartaoGrupo';
 import { IconMais } from './icons';
 
 interface Props {
@@ -18,6 +19,14 @@ interface Props {
 
 const LIMITE_VISIVEL = 4;
 
+type ItemDia =
+  | { tipo: 'conta'; conta: Conta }
+  | { tipo: 'grupo'; grupo: ReturnType<typeof agruparPorCategoria>[number] };
+
+function chaveGrupo(categoria_id: string | null, dia: string): string {
+  return `${categoria_id ?? '__null__'}::${dia}`;
+}
+
 export function CalendarioMensal({
   dataRef,
   hoje,
@@ -32,6 +41,17 @@ export function CalendarioMensal({
   const mesRef = parseISO(dataRef).getMonth();
   const [arrastando, setArrastando] = useState(false);
   const [diaAlvo, setDiaAlvo] = useState<string | null>(null);
+  const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
+
+  const toggleGrupo = useCallback((categoria_id: string | null, dia: string) => {
+    setExpandidos((prev) => {
+      const chave = chaveGrupo(categoria_id, dia);
+      const next = new Set(prev);
+      if (next.has(chave)) next.delete(chave);
+      else next.add(chave);
+      return next;
+    });
+  }, []);
 
   return (
     <div className="flex h-full flex-col">
@@ -52,9 +72,20 @@ export function CalendarioMensal({
           const noMes = data.getMonth() === mesRef;
           const ehHoje = dia === hoje;
           const contas = porDia.get(dia) ?? [];
-          const visiveis = contas.slice(0, LIMITE_VISIVEL);
-          const ocultas = contas.length - visiveis.length;
           const alvo = diaAlvo === dia;
+
+          const grupos = agruparPorCategoria(contas, mapaCat);
+          const itens: ItemDia[] = [];
+          for (const g of grupos) {
+            if (g.contas.length === 1) {
+              itens.push({ tipo: 'conta', conta: g.contas[0] });
+            } else {
+              itens.push({ tipo: 'grupo', grupo: g });
+            }
+          }
+
+          const visiveis = itens.slice(0, LIMITE_VISIVEL);
+          const ocultas = itens.length - visiveis.length;
 
           return (
             <div
@@ -102,22 +133,40 @@ export function CalendarioMensal({
               </div>
 
               <div className="flex flex-1 flex-col gap-1 overflow-y-auto">
-                {visiveis.map((c) => (
-                  <CartaoConta
-                    key={c.id}
-                    conta={c}
-                    hoje={hoje}
-                    mapaCat={mapaCat}
-                    arrastavel
-                    onClick={onAbrirConta}
-                    onTogglePago={onTogglePago}
-                    onArrastarInicio={() => setArrastando(true)}
-                    onArrastarFim={() => {
-                      setArrastando(false);
-                      setDiaAlvo(null);
-                    }}
-                  />
-                ))}
+                {visiveis.map((item) =>
+                  item.tipo === 'conta' ? (
+                    <CartaoConta
+                      key={item.conta.id}
+                      conta={item.conta}
+                      hoje={hoje}
+                      mapaCat={mapaCat}
+                      arrastavel
+                      onClick={onAbrirConta}
+                      onTogglePago={onTogglePago}
+                      onArrastarInicio={() => setArrastando(true)}
+                      onArrastarFim={() => {
+                        setArrastando(false);
+                        setDiaAlvo(null);
+                      }}
+                    />
+                  ) : (
+                    <CartaoGrupo
+                      key={chaveGrupo(item.grupo.categoria_id, dia)}
+                      grupo={item.grupo}
+                      expandido={expandidos.has(chaveGrupo(item.grupo.categoria_id, dia))}
+                      onToggle={() => toggleGrupo(item.grupo.categoria_id, dia)}
+                      hoje={hoje}
+                      mapaCat={mapaCat}
+                      onClick={onAbrirConta}
+                      onTogglePago={onTogglePago}
+                      onArrastarInicio={() => setArrastando(true)}
+                      onArrastarFim={() => {
+                        setArrastando(false);
+                        setDiaAlvo(null);
+                      }}
+                    />
+                  )
+                )}
                 {ocultas > 0 && (
                   <span className="pl-1 text-[11px] font-medium text-slate-400">+{ocultas} mais</span>
                 )}

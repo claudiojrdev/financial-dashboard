@@ -135,3 +135,12 @@ export type Tema = 'light' | 'dark';
 
 /** Situação visual derivada de uma conta numa data de referência. */
 export type StatusConta = 'pago' | 'parcial' | 'pendente' | 'vencido';
+
+/** Grupo de contas da mesma categoria no mesmo dia. */
+export interface GrupoConta {
+  categoria_id: string | null;
+  catNome: string;
+  catCor: string;
+  contas: Conta[];
+  soma: number;
+}

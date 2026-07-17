@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { parseISO } from 'date-fns';
 import type { Categoria, Conta } from '../types';
-import { NOMES_DIAS, gradeSemanal } from '../lib/calendar';
+import { NOMES_DIAS, agruparPorCategoria, gradeSemanal } from '../lib/calendar';
 import { formatarMoeda } from '../lib/format';
 import { CartaoConta } from './CartaoConta';
+import { CartaoGrupo } from './CartaoGrupo';
 import { IconMais } from './icons';
 
 interface Props {
@@ -15,6 +16,14 @@ interface Props {
   onTogglePago: (conta: Conta) => void;
   onNovaNoDia: (dataISO: string) => void;
   onSoltarNoDia: (id: string, dataISO: string) => void;
+}
+
+type ItemDia =
+  | { tipo: 'conta'; conta: Conta }
+  | { tipo: 'grupo'; grupo: ReturnType<typeof agruparPorCategoria>[number] };
+
+function chaveGrupo(categoria_id: string | null, dia: string): string {
+  return `${categoria_id ?? '__null__'}::${dia}`;
 }
 
 export function CalendarioSemanal({
@@ -30,6 +39,17 @@ export function CalendarioSemanal({
   const dias = gradeSemanal(dataRef);
   const [arrastando, setArrastando] = useState(false);
   const [diaAlvo, setDiaAlvo] = useState<string | null>(null);
+  const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
+
+  const toggleGrupo = useCallback((categoria_id: string | null, dia: string) => {
+    setExpandidos((prev) => {
+      const chave = chaveGrupo(categoria_id, dia);
+      const next = new Set(prev);
+      if (next.has(chave)) next.delete(chave);
+      else next.add(chave);
+      return next;
+    });
+  }, []);
 
   return (
     <div className="grid h-full grid-cols-1 sm:grid-cols-7">
@@ -39,6 +59,16 @@ export function CalendarioSemanal({
         const contas = porDia.get(dia) ?? [];
         const totalDia = contas.reduce((s, c) => s + c.valor, 0);
         const alvo = diaAlvo === dia;
+
+        const grupos = agruparPorCategoria(contas, mapaCat);
+        const itens: ItemDia[] = [];
+        for (const g of grupos) {
+          if (g.contas.length === 1) {
+            itens.push({ tipo: 'conta', conta: g.contas[0] });
+          } else {
+            itens.push({ tipo: 'grupo', grupo: g });
+          }
+        }
 
         return (
           <div
@@ -90,28 +120,47 @@ export function CalendarioSemanal({
             </div>
 
             <div className="flex flex-1 flex-col gap-1.5 overflow-y-auto p-2">
-              {contas.length === 0 ? (
+              {itens.length === 0 ? (
                 <span className="mt-2 text-center text-[11px] text-slate-300 dark:text-slate-600">
                   —
                 </span>
               ) : (
-                contas.map((c) => (
-                  <CartaoConta
-                    key={c.id}
-                    conta={c}
-                    hoje={hoje}
-                    mapaCat={mapaCat}
-                    detalhado
-                    arrastavel
-                    onClick={onAbrirConta}
-                    onTogglePago={onTogglePago}
-                    onArrastarInicio={() => setArrastando(true)}
-                    onArrastarFim={() => {
-                      setArrastando(false);
-                      setDiaAlvo(null);
-                    }}
-                  />
-                ))
+                itens.map((item) =>
+                  item.tipo === 'conta' ? (
+                    <CartaoConta
+                      key={item.conta.id}
+                      conta={item.conta}
+                      hoje={hoje}
+                      mapaCat={mapaCat}
+                      detalhado
+                      arrastavel
+                      onClick={onAbrirConta}
+                      onTogglePago={onTogglePago}
+                      onArrastarInicio={() => setArrastando(true)}
+                      onArrastarFim={() => {
+                        setArrastando(false);
+                        setDiaAlvo(null);
+                      }}
+                    />
+                  ) : (
+                    <CartaoGrupo
+                      key={chaveGrupo(item.grupo.categoria_id, dia)}
+                      grupo={item.grupo}
+                      expandido={expandidos.has(chaveGrupo(item.grupo.categoria_id, dia))}
+                      onToggle={() => toggleGrupo(item.grupo.categoria_id, dia)}
+                      hoje={hoje}
+                      mapaCat={mapaCat}
+                      detalhado
+                      onClick={onAbrirConta}
+                      onTogglePago={onTogglePago}
+                      onArrastarInicio={() => setArrastando(true)}
+                      onArrastarFim={() => {
+                        setArrastando(false);
+                        setDiaAlvo(null);
+                      }}
+                    />
+                  )
+                )
               )}
             </div>
 
