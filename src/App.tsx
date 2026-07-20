@@ -2,11 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Conta, Visao } from './types';
 import { useStore } from './store/useStore';
+import { endOfMonth, endOfWeek, parseISO, startOfMonth, startOfWeek } from 'date-fns';
 import { agruparPorVencimento, navegar } from './lib/calendar';
 import { alternarPago, contaVazia } from './lib/contas';
 import { exportarCSV, exportarXLSX } from './lib/export';
 import { gerarExemplo } from './lib/exemplo';
-import { calcularTotais } from './lib/totais';
+import { calcularSerieDiaria, calcularSerieMensal, calcularSerieSemanal, calcularTotais } from './lib/totais';
 import { hojeISO } from './lib/status';
 import { mapaCategorias } from './lib/categorias';
 import { avaliarConta, contarRegras } from './lib/filtros';
@@ -91,7 +92,33 @@ export default function App() {
   );
 
   const porDia = useMemo(() => agruparPorVencimento(contasFiltradas), [contasFiltradas]);
-  const totais = useMemo(() => calcularTotais(contasFiltradas, hoje), [contasFiltradas, hoje]);
+
+  const contasVisiveis = useMemo(() => {
+    const ref = parseISO(dataRef);
+    if (visao === 'semanal') {
+      const ini = startOfWeek(ref, { weekStartsOn: 0 });
+      const fim = endOfWeek(ref, { weekStartsOn: 0 });
+      return contasFiltradas.filter((c) => {
+        const d = parseISO(c.data_vencimento);
+        return d >= ini && d <= fim;
+      });
+    }
+    const ini = startOfMonth(ref);
+    const fim = endOfMonth(ref);
+    return contasFiltradas.filter((c) => {
+      const d = parseISO(c.data_vencimento);
+      return d >= ini && d <= fim;
+    });
+  }, [contasFiltradas, dataRef, visao]);
+
+  const totaisVisiveis = useMemo(() => calcularTotais(contasVisiveis, hoje), [contasVisiveis, hoje]);
+
+  const serieGrafico = useMemo(() => {
+    if (visao === 'semanal') return calcularSerieDiaria(contasFiltradas, hoje, dataRef);
+    if (visao === 'mensal') return calcularSerieSemanal(contasFiltradas, hoje, dataRef);
+    return calcularSerieMensal(contasFiltradas, hoje, 12);
+  }, [contasFiltradas, hoje, dataRef, visao]);
+
   const filtrosAtivos = filtro ? contarRegras(filtro) : 0;
 
   const abrirConta = useCallback((conta: Conta) => {
@@ -184,7 +211,7 @@ export default function App() {
           <EstadoVazio onImportar={() => setImportAberto(true)} onExemplo={carregarExemplo} />
         ) : (
           <>
-            <Resumo totais={totais} />
+            <Resumo totais={totaisVisiveis} serieGrafico={serieGrafico} />
             <BarraPeriodo
               dataRef={dataRef}
               visao={visao}
@@ -266,7 +293,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="card relative min-h-[34rem] flex-1 overflow-hidden">
+            <div className="card relative min-h-[calc(100vh-16rem)] flex-1 overflow-hidden">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={visao}
@@ -298,6 +325,7 @@ export default function App() {
                     />
                   ) : (
                     <TabelaContas
+                      dataRef={dataRef}
                       contas={contasFiltradas}
                       categorias={categorias}
                       mapaCat={mapaCat}

@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { parseISO } from 'date-fns';
 import type { Categoria, Conta } from '../types';
 import { NOMES_DIAS, agruparPorCategoria, gradeMensal } from '../lib/calendar';
+import { formatarMoeda } from '../lib/format';
 import { CartaoConta } from './CartaoConta';
 import { CartaoGrupo } from './CartaoGrupo';
 import { IconMais } from './icons';
@@ -70,6 +71,9 @@ export function CalendarioMensal({
           const noMes = data.getMonth() === mesRef;
           const ehHoje = dia === hoje;
           const contas = porDia.get(dia) ?? [];
+          const totalDia = contas.reduce((s, c) => s + c.valor, 0);
+          const pagoDia = contas.reduce((s, c) => s + (c.valor_pago ?? 0), 0);
+          const abertoDia = contas.reduce((s, c) => s + (c.valor - (c.valor_pago ?? 0)), 0);
           const alvo = diaAlvo === dia;
 
           const grupos = agruparPorCategoria(contas, mapaCat);
@@ -138,6 +142,7 @@ export function CalendarioMensal({
                       conta={item.conta}
                       hoje={hoje}
                       mapaCat={mapaCat}
+                      detalhado
                       arrastavel
                       onClick={onAbrirConta}
                       onArrastarInicio={() => setArrastando(true)}
@@ -154,6 +159,7 @@ export function CalendarioMensal({
                       onToggle={() => toggleGrupo(item.grupo.categoria_id, dia)}
                       hoje={hoje}
                       mapaCat={mapaCat}
+                      detalhado
                       onClick={onAbrirConta}
                       onArrastarInicio={() => setArrastando(true)}
                       onArrastarFim={() => {
@@ -167,6 +173,18 @@ export function CalendarioMensal({
                   <span className="pl-1 text-[11px] font-medium text-slate-400">+{ocultas} mais</span>
                 )}
               </div>
+
+              {totalDia > 0 && (
+                <div className="border-t border-slate-200 px-1 pt-1 text-right text-[11px] tabular-nums leading-tight text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                  <div>Total: {formatarMoeda(totalDia)}</div>
+                  <div className="text-emerald-600 dark:text-emerald-400">
+                    Pago: {formatarMoeda(pagoDia)}
+                  </div>
+                  <div className="text-amber-600 dark:text-amber-400">
+                    Aberto: {formatarMoeda(abertoDia)}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}

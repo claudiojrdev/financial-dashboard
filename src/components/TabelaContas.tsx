@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { endOfMonth, parseISO, startOfMonth } from 'date-fns';
 import type { Categoria, Conta } from '../types';
 import { agruparPorMes } from '../lib/calendar';
 import { calcularTotais } from '../lib/totais';
@@ -8,6 +9,7 @@ import { corCategoria } from '../lib/categorias';
 import { IconLixeira } from './icons';
 
 interface Props {
+  dataRef: string;
   contas: Conta[];
   categorias: Categoria[];
   mapaCat: Map<string, Categoria>;
@@ -18,6 +20,7 @@ interface Props {
 }
 
 export function TabelaContas({
+  dataRef,
   contas,
   categorias,
   mapaCat,
@@ -26,12 +29,21 @@ export function TabelaContas({
   onTogglePago,
   onExcluir,
 }: Props) {
-  const grupos = useMemo(() => agruparPorMes(contas), [contas]);
+  const contasDoMes = useMemo(() => {
+    const inicio = startOfMonth(parseISO(dataRef));
+    const fim = endOfMonth(inicio);
+    return contas.filter((c) => {
+      const d = parseISO(c.data_vencimento);
+      return d >= inicio && d <= fim;
+    });
+  }, [contas, dataRef]);
 
-  if (contas.length === 0) {
+  const grupos = useMemo(() => agruparPorMes(contasDoMes), [contasDoMes]);
+
+  if (contasDoMes.length === 0) {
     return (
       <div className="flex h-full items-center justify-center py-16 text-center text-sm text-slate-400">
-        Nenhuma conta para os filtros atuais.
+        Nenhuma conta neste mês.
       </div>
     );
   }
