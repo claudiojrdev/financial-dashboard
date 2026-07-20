@@ -42,6 +42,7 @@ const CAMPOS: CampoFiltro[] = [
   'pago',
   'data_vencimento',
   'data_pagamento',
+  'tipocobranca',
 ];
 
 /** Valor inicial coerente ao trocar de campo/operador. */

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { api, type ConfigResponse } from '../lib/api';
+import { api } from '../lib/api';
 import { IconFechar } from './icons';
 import { toast } from './Toaster';
 

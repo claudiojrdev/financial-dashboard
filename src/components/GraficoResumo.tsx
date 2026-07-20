@@ -26,9 +26,8 @@ const H = ALTURA - PAD.t - PAD.b;
 const CAMPOS = ['previsto', 'pago', 'pendente', 'vencido'] as const;
 
 export function GraficoResumo({ serie }: Props) {
-  if (serie.length < 2) return null;
-
-  const { escalaX, linhas } = useMemo(() => {
+  const dados = useMemo(() => {
+    if (serie.length < 2) return null;
     const todosValores = serie.flatMap((p) => [p.previsto, p.pago, p.pendente, p.vencido]);
     const maxVal = Math.max(...todosValores, 1);
 
@@ -47,6 +46,9 @@ export function GraficoResumo({ serie }: Props) {
 
     return { escalaX, linhas, maxVal };
   }, [serie]);
+
+  if (!dados) return null;
+  const { escalaX, linhas } = dados;
 
   return (
     <div className="w-full min-w-[400px]">

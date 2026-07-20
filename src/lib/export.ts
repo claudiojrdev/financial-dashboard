@@ -13,6 +13,7 @@ const COLUNAS = [
   'data_vencimento',
   'data_pagamento',
   'pago',
+  'tipocobranca',
 ] as const;
 
 /** Monta linhas amigáveis a partir das contas, resolvendo a categoria por nome. */
@@ -27,6 +28,7 @@ function paraLinhas(contas: Conta[], categorias: Categoria[]): Record<string, st
     data_vencimento: c.data_vencimento ? formatarData(c.data_vencimento) : '',
     data_pagamento: c.data_pagamento ? formatarData(c.data_pagamento) : '',
     pago: c.pago ? 'sim' : 'não',
+    tipocobranca: c.tipocobranca,
   }));
 }
 

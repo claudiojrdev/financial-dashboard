@@ -25,6 +25,7 @@ const CAMPOS: { campo: CampoImportavel; rotulo: string }[] = [
   { campo: 'data_vencimento', rotulo: 'Vencimento' },
   { campo: 'data_pagamento', rotulo: 'Data pagamento' },
   { campo: 'pago', rotulo: 'Pago' },
+  { campo: 'tipocobranca', rotulo: 'Tipo' },
   { campo: 'id', rotulo: 'ID' },
 ];
 

@@ -30,6 +30,7 @@ const SINONIMOS: Record<CampoImportavel, string[]> = {
   data_vencimento: ['data_vencimento', 'vencimento', 'venc', 'data_venc', 'dt_vencimento'],
   data_pagamento: ['data_pagamento', 'pagamento', 'data_pgto', 'dt_pagamento', 'data_quitacao'],
   pago: ['pago', 'quitado', 'status', 'situacao', 'liquidado'],
+  tipocobranca: ['tipocobranca', 'tipo_cobranca', 'natureza', 'tipo_lancamento', 'receita_despesa'],
 };
 
 /** Tenta casar um cabeçalho cru com um campo importável. */

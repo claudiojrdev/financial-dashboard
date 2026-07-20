@@ -28,6 +28,7 @@ export const TIPO_DO_CAMPO: Record<CampoFiltro, TipoCampo> = {
   pago: 'booleano',
   data_vencimento: 'data',
   data_pagamento: 'data',
+  tipocobranca: 'texto',
 };
 
 export const ROTULO_CAMPO: Record<CampoFiltro, string> = {
@@ -40,6 +41,7 @@ export const ROTULO_CAMPO: Record<CampoFiltro, string> = {
   pago: 'Pago',
   data_vencimento: 'Vencimento',
   data_pagamento: 'Data pagamento',
+  tipocobranca: 'Tipo',
 };
 
 export const ROTULO_OPERADOR: Record<Operador, string> = {
@@ -154,6 +156,8 @@ function avaliarRegra(conta: Conta, regra: Regra, ctx: CtxFiltro): boolean {
     case 'data_vencimento':
     case 'data_pagamento':
       return cmpData(conta[campo] ?? '', operador, valor);
+    case 'tipocobranca':
+      return cmpTexto(conta[campo], operador, valor);
   }
 }
 

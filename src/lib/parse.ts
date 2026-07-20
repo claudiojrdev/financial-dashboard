@@ -143,6 +143,8 @@ export function normalizarLinhas(
     if (!pago) valorPago = valorPago ?? null;
 
     const idBruto = (bruto('id') ?? '').toString().trim();
+    const rawTipo = (bruto('tipocobranca') ?? '').toString().trim().toLowerCase();
+    const tipocobranca = rawTipo === 'receita' ? 'receita' : 'despesa';
 
     contas.push({
       id: idBruto || crypto.randomUUID(),
@@ -155,6 +157,7 @@ export function normalizarLinhas(
       data_vencimento: dataVenc as string,
       data_pagamento: pago ? dataPgto : null,
       pago,
+      tipocobranca,
     });
   });
 

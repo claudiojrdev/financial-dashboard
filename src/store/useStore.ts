@@ -38,7 +38,6 @@ interface EstadoApp {
   mudarVencimento: (id: string, dataISO: string) => Promise<void>;
   importar: (novas: ContaImportada[], politica: PoliticaImportacao) => Promise<void>;
   carregarConjunto: (contas: Conta[], categorias: Categoria[]) => Promise<void>;
-  limparTudo: () => Promise<void>;
 
   criarCategoria: (nome: string, cor: string) => Promise<Categoria>;
   atualizarCategoria: (categoria: Categoria) => Promise<void>;
@@ -168,11 +167,6 @@ export const useStore = create<EstadoApp>((set, get) => ({
     await db.salvarCategorias(categorias);
     await db.salvarContas(contas);
     set({ contas, categorias });
-  },
-
-  limparTudo: async () => {
-    await db.limparContas();
-    set({ contas: [] });
   },
 
   criarCategoria: async (nome, cor) => {
