@@ -3,11 +3,13 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Dashboard de contas a pagar com calendário interativo (somente frontend, offline-first).",
+  "description": "Dashboard de contas a pagar com calendário interativo, multi-usuário e sincronia com servidor.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "start": "npm run build && cd server && node index.js",
+    "dev:server": "node --watch server/index.js",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "postinstall": "cd server && npm install",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit"
   },
