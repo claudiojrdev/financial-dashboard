@@ -5,6 +5,7 @@ import {
   IconDownload,
   IconFiltro,
   IconLua,
+  IconSair,
   IconSol,
   IconTag,
   IconUpload,
@@ -20,6 +21,7 @@ interface Props {
   onExportarXLSX: () => void;
   onCategorias: () => void;
   onFiltros: () => void;
+  onLogout: () => void | Promise<void>;
 }
 
 export function Cabecalho({
@@ -32,6 +34,7 @@ export function Cabecalho({
   onExportarXLSX,
   onCategorias,
   onFiltros,
+  onLogout,
 }: Props) {
   const [menuExport, setMenuExport] = useState(false);
 
@@ -107,6 +110,15 @@ export function Cabecalho({
             )}
           </div>
 
+          <button
+            type="button"
+            onClick={onLogout}
+            className="btn-ghost px-2 py-2 text-slate-400 hover:text-red-500"
+            aria-label="Sair"
+            title="Sair"
+          >
+            <IconSair />
+          </button>
           <button
             type="button"
             onClick={onAlternarTema}

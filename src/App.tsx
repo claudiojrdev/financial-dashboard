@@ -25,6 +25,7 @@ import { ModalFiltros } from './components/ModalFiltros';
 import { EstadoVazio } from './components/EstadoVazio';
 import { BotaoSync } from './components/BotaoSync';
 import { ConfigMeeventos } from './components/ConfigMeeventos';
+import { TelaLogin } from './components/TelaLogin';
 import { Toaster, toast } from './components/Toaster';
 import { IconFiltro, IconSettings } from './components/icons';
 
@@ -53,6 +54,12 @@ export default function App() {
     meeventosConfigurado,
     setMeeventosConfigurado,
     setUltimaSync,
+    login,
+    register,
+    logout,
+    verificarAuth,
+    autenticado,
+    token,
   } = useStore();
 
   const [contaAberta, setContaAberta] = useState<Conta | null>(null);
@@ -63,19 +70,25 @@ export default function App() {
   const [configMeeventosAberto, setConfigMeeventosAberto] = useState(false);
   const [filtroPago, setFiltroPago] = useState<'todas' | 'pago' | 'aberto'>('todas');
   const [filtroTipo, setFiltroTipo] = useState<'receita' | 'despesa'>('despesa');
+  const [authVerificado, setAuthVerificado] = useState(false);
 
   const hoje = hojeISO();
 
   useEffect(() => {
-    carregar();
-  }, [carregar]);
+    verificarAuth().then(() => setAuthVerificado(true));
+  }, [verificarAuth]);
 
   useEffect(() => {
+    if (autenticado) carregar();
+  }, [autenticado, carregar]);
+
+  useEffect(() => {
+    if (!autenticado) return;
     api.getSyncStatus().then((s) => {
       setMeeventosConfigurado(s.configurado);
       if (s.ultima_sync) setUltimaSync(s.ultima_sync);
     }).catch(() => {});
-  }, [setMeeventosConfigurado, setUltimaSync]);
+  }, [autenticado, setMeeventosConfigurado, setUltimaSync]);
 
   const mapaCat = useMemo(() => mapaCategorias(categorias), [categorias]);
 
@@ -190,6 +203,22 @@ export default function App() {
     toast.sucesso(`Planilha .${tipo} exportada.`);
   }
 
+  if (!authVerificado) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <p className="text-slate-400">Verificando autenticação…</p>
+      </div>
+    );
+  }
+
+  if (!token) {
+    return <TelaLogin onLogin={login} onRegister={register} />;
+  }
+
+  if (!autenticado) {
+    return <TelaLogin onLogin={login} onRegister={register} />;
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <Cabecalho
@@ -202,6 +231,7 @@ export default function App() {
         onExportarXLSX={() => exportar('xlsx')}
         onCategorias={() => setCatAberto(true)}
         onFiltros={() => setFiltrosAberto(true)}
+        onLogout={logout}
       />
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-5">

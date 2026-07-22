@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import { getDB, fechar } from './db.js';
+import { routerAuth, autenticar } from './auth.js';
 import { routerSync } from './sync.js';
 import { routerMovements } from './movements.js';
 import { routerConfig } from './config.js';
@@ -22,15 +23,18 @@ getDB();
 // Servir o build do frontend (dist/ na raiz do projeto)
 app.use(express.static(path.join(__dirname, '../dist')));
 
-// Rotas
-app.use('/api', routerSync);
-app.use('/api', routerMovements);
-app.use('/api', routerConfig);
+// Rotas públicas
+app.use('/api', routerAuth);
 app.use('/api', routerWebhooks);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
+
+// Rotas protegidas
+app.use('/api', autenticar, routerSync);
+app.use('/api', autenticar, routerMovements);
+app.use('/api', autenticar, routerConfig);
 
 // Fallback SPA: qualquer rota não /api serve o index.html
 app.get('*', (_req, res) => {

@@ -3,9 +3,9 @@ import { getDB } from './db.js';
 
 export const routerConfig = Router();
 
-routerConfig.get('/config', (_req, res) => {
+routerConfig.get('/config', (req, res) => {
   const db = getDB();
-  const linhas = db.prepare('SELECT chave, valor FROM config').all();
+  const linhas = db.prepare('SELECT chave, valor FROM config_usuario WHERE user_id = ?').all(req.userId);
   const config = Object.fromEntries(linhas.map((r) => [r.chave, r.valor]));
   res.json({
     meeventos_url: config.meeventos_url || '',
@@ -22,11 +22,11 @@ routerConfig.post('/config', (req, res) => {
 
   const db = getDB();
   const upsert = db.prepare(
-    'INSERT INTO config (chave, valor) VALUES (?, ?) ON CONFLICT(chave) DO UPDATE SET valor = excluded.valor'
+    'INSERT INTO config_usuario (user_id, chave, valor) VALUES (?, ?, ?) ON CONFLICT(user_id, chave) DO UPDATE SET valor = excluded.valor'
   );
 
-  upsert.run('meeventos_url', meeventos_url.replace(/\/+$/, ''));
-  upsert.run('meeventos_token', meeventos_token);
+  upsert.run(req.userId, 'meeventos_url', meeventos_url.replace(/\/+$/, ''));
+  upsert.run(req.userId, 'meeventos_token', meeventos_token);
 
   res.json({ status: 'ok', message: 'Configuração salva.' });
 });

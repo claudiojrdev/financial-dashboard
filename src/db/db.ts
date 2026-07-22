@@ -127,3 +127,8 @@ export async function removerCategoria(id: string): Promise<void> {
   const db = await getDB();
   await db.delete('categorias', id);
 }
+
+export async function limparCategorias(): Promise<void> {
+  const db = await getDB();
+  await db.clear('categorias');
+}

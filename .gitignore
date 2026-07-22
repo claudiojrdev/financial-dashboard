@@ -6,5 +6,8 @@ dist-ssr
 .vite
 *.log
 server/data.sqlite
+server/data.sqlite-shm
+server/data.sqlite-wal
 server/node_modules
 server/.env
+*.tsbuildinfo
